@@ -44,6 +44,20 @@ percent_melted = df.melt(id_vars=["week"], value_vars=["MRSA_%", "VRSA_%", "Othe
 df_long = percent_melted.copy()
 df_long["Count"] = case_melted["Count"]
 
+# Add alert flags for the plot
+alert_flags = []
+for i, row in df.iterrows():
+    alert = False
+    if row["MRSA_alert"] and "MRSA_%" in percent_melted.iloc[i::len(df)].Phenotype.values:
+        alert = True
+    if row["Other_alert"] and "Other_%" in percent_melted.iloc[i::len(df)].Phenotype.values:
+        alert = True
+    if row["VRSA_alert"] and "VRSA_%" in percent_melted.iloc[i::len(df)].Phenotype.values:
+        alert = True
+    alert_flags.extend(["🔴" if alert else ""] * 4)  # 4 phenotypes per week
+
+df_long["Alert"] = alert_flags
+
 # Define custom dark colors
 color_map = {
     "VRSA_%": "#8B0000",   # Dark red
@@ -60,8 +74,8 @@ fig = px.line(df_long, x="week", y="Percentage", color="Phenotype",
               color_discrete_map=color_map)
 
 fig.update_traces(mode="lines+markers",
-                  hovertemplate="%{y:.1f}%<br>Week: %{x|%Y-%m-%d}<br>Phenotype: %{fullData.name}<br>Count: %{customdata[0]}",
-                  customdata=df_long[["Count"]].values)
+                  hovertemplate="%{y:.1f}%<br>Week: %{x|%Y-%m-%d}<br>Phenotype: %{fullData.name}<br>Count: %{customdata[0]} %{customdata[1]}",
+                  customdata=df_long[["Count", "Alert"]].values)
 
 # Show plot
 st.plotly_chart(fig, use_container_width=True)
