@@ -24,11 +24,20 @@ df_long = df.melt(id_vars="week",
                   value_vars=["MRSA_%", "VRSA_%", "Other_%", "Wild_%"],
                   var_name="Phenotype", value_name="Percentage")
 
+# Define custom dark colors
+color_map = {
+    "VRSA_%": "#8B0000",   # Dark red
+    "MRSA_%": "#FF8C00",   # Dark orange
+    "Other_%": "#00008B",  # Dark blue
+    "Wild_%": "#006400"     # Dark green
+}
+
 # Plot
 fig = px.line(df_long, x="week", y="Percentage", color="Phenotype",
               markers=True, range_y=[0, 100],
               labels={"week": "Week", "Percentage": "% of Cases"},
-              title="Percentage Distribution of Phenotypes per Week")
+              title="Percentage Distribution of Phenotypes per Week",
+              color_discrete_map=color_map)
 
 fig.update_traces(mode="lines+markers",
                   hovertemplate="%{y:.1f}%<br>Week: %{x|%Y-%m-%d}<br>Phenotype: %{fullData.name}")
