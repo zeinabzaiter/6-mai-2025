@@ -20,9 +20,13 @@ def load_data():
 df = load_data()
 
 # Transform to long format for plotting
-df_long = df.melt(id_vars="week", 
-                  value_vars=["MRSA_%", "VRSA_%", "Other_%", "Wild_%"],
-                  var_name="Phenotype", value_name="Percentage")
+# We'll also prepare a column for counts to be shown in the hover text
+df_long = pd.concat([
+    df.melt(id_vars=["week"], value_vars=["MRSA_%", "VRSA_%", "Other_%", "Wild_%"],
+            var_name="Phenotype", value_name="Percentage"),
+    df.melt(id_vars=["week"], value_vars=["MRSA", "VRSA", "Other", "Wild"],
+            var_name="Phenotype_Count", value_name="Count")[["Count"]]
+], axis=1)
 
 # Define custom dark colors
 color_map = {
@@ -40,7 +44,8 @@ fig = px.line(df_long, x="week", y="Percentage", color="Phenotype",
               color_discrete_map=color_map)
 
 fig.update_traces(mode="lines+markers",
-                  hovertemplate="%{y:.1f}%<br>Week: %{x|%Y-%m-%d}<br>Phenotype: %{fullData.name}")
+                  hovertemplate="%{y:.1f}%<br>Week: %{x|%Y-%m-%d}<br>Phenotype: %{fullData.name}<br>Count: %{customdata[0]}",
+                  customdata=df_long[["Count"]].values)
 
 # Show plot
 st.plotly_chart(fig, use_container_width=True)
